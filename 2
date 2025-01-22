@@ -1430,7 +1430,6 @@ end
 local isToggleEnabled = false
 local isCollideEnabled = false
 
--- Update the slider to control hitbox size
 setupSlider(Slider, SlidePart, TextLabel_3, 10, 1)
 SlidePart.Changed:Connect(function()
     local value = SlidePart.Size.X.Scale * 10
@@ -1438,23 +1437,79 @@ SlidePart.Changed:Connect(function()
     TextLabel_3.Text = tostring(value)
 end)
 
--- Update the toggle to control hitbox visibility
 Toggle.MouseButton1Click:Connect(function()
     isToggleEnabled = not isToggleEnabled
     updateButtonColor(Toggle, isToggleEnabled)
     updateHitboxVisibility(isToggleEnabled)
 end)
 
--- Update the CanCollide toggle
 Collide.MouseButton1Click:Connect(function()
     isCollideEnabled = not isCollideEnabled
     updateButtonColor(Collide, isCollideEnabled)
     updateCanCollide(isCollideEnabled)
 end)
 
--- Initial setup
 updateHitboxSize(1)
 updateHitboxVisibility(false)
 updateCanCollide(false)
 updateButtonColor(Toggle, isToggleEnabled)
 updateButtonColor(Collide, isCollideEnabled)
+
+local xrayEnabled = false
+local currentXrayKeybind = nil
+local listeningForXrayKeybind = false
+
+local function xray()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and not v.Parent:FindFirstChildWhichIsA("Humanoid") and not v.Parent.Parent:FindFirstChildWhichIsA("Humanoid") then
+            v.LocalTransparencyModifier = xrayEnabled and 0.5 or 0
+        end
+    end
+end
+
+local function toggleXray()
+    xrayEnabled = not xrayEnabled
+    updateButtonColor(Xray, xrayEnabled)
+    xray()
+end
+
+local function updateButtonColor(button, isEnabled)
+    if isEnabled then
+        button.BackgroundColor3 = Color3.fromRGB(87, 90, 150)
+    else
+        button.BackgroundColor3 = Color3.new(0.0470588, 0.0470588, 0.0470588)
+    end
+end
+
+local function setKeybind(key, picker, listener)
+    if picker == Keybind_2 then
+        currentXrayKeybind = key
+    end
+    picker.Text = key.Name
+    listener = false
+end
+
+local UserInputService = game:GetService("UserInputService")
+
+Keybind_2.MouseButton1Click:Connect(function()
+    listeningForXrayKeybind = true
+    Keybind_2.Text = "..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if listeningForXrayKeybind then
+            setKeybind(input.KeyCode, Keybind_2, listeningForXrayKeybind)
+            listeningForXrayKeybind = false
+        elseif input.KeyCode == currentXrayKeybind then
+            toggleXray()
+        end
+    end
+end)
+
+Xray.MouseButton1Click:Connect(function()
+    toggleXray()
+end)
+
+updateButtonColor(Xray, xrayEnabled)
+Keybind_2.Text = "None"
