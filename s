@@ -1950,7 +1950,7 @@ local settings = {
     opacity = 1,
     x_offset = 0,
     y_offset = 0,
-    recenter = true,
+    recenter = false,
     pulsate = false,
     pulsateSpeed = 4,
     pulsateVariation = 0.9,
@@ -1992,9 +1992,9 @@ local pulsateSpeed = settings.pulsateSpeed
 local lastPulsateChange = tick()
 
 local function updateCrosshair()
-    if not settings.pulsate and not settings.recenter then return end
-    local centerX = cam.ViewportSize.x / 2
-    local centerY = cam.ViewportSize.y / 2
+    if not settings.recenter then return end
+    local centerX = cam.ViewportSize.X / 2
+    local centerY = cam.ViewportSize.Y / 2
     local Real_Size = settings.length
 
     if settings.pulsate then
@@ -2034,6 +2034,14 @@ local function togglePulsate()
     updateButtonColor(Pulse, settings.pulsate)
 end
 
+local function updateButtonColor(button, isEnabled)
+    if isEnabled then
+        button.BackgroundColor3 = Color3.fromRGB(87, 90, 150)
+    else
+        button.BackgroundColor3 = Color3.new(0.0470588, 0.0470588, 0.0470588)
+    end
+end
+
 CrossEnab.MouseButton1Click:Connect(function()
     toggleCrosshair()
 end)
@@ -2042,5 +2050,6 @@ Pulse.MouseButton1Click:Connect(function()
     togglePulsate()
 end)
 
+-- Ensure the initial state is set correctly
 updateButtonColor(CrossEnab, settings.recenter)
 updateButtonColor(Pulse, settings.pulsate)
