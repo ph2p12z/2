@@ -1943,6 +1943,10 @@ end
 
 updateButtonColor(Silent, isSilentEnabled)
 
+-- Ensure the script is being loaded correctly
+print("Script loaded successfully")
+
+-- Define the settings for the crosshair and pulsation
 local settings = {
     color = Color3.fromRGB(255, 255, 255),
     thickness = 2,
@@ -1959,9 +1963,21 @@ local settings = {
     maxPulsateSize = 16
 }
 
+-- Ensure the camera is available
 local cam = workspace.CurrentCamera or workspace:FindFirstChildOfClass("Camera")
-local RunService = game:GetService("RunService")
+if not cam then
+    warn("Camera not found")
+    return
+end
 
+-- Ensure the RunService is available
+local RunService = game:GetService("RunService")
+if not RunService then
+    warn("RunService not found")
+    return
+end
+
+-- Function to create drawing objects
 local function draw(type, properties)
     local obj = Drawing.new(type)
     for i, v in pairs(properties) do
@@ -1970,6 +1986,7 @@ local function draw(type, properties)
     return obj
 end
 
+-- Create the crosshair drawing objects
 local HorizontalLine = draw("Line", {
     From = Vector2.new(0, 0),
     To = Vector2.new(0, 0),
@@ -1991,6 +2008,7 @@ local VerticalLine = draw("Line", {
 local pulsateSpeed = settings.pulsateSpeed
 local lastPulsateChange = tick()
 
+-- Function to update the crosshair
 local function updateCrosshair()
     if not settings.recenter then return end
     local centerX = cam.ViewportSize.X / 2
@@ -2014,14 +2032,17 @@ local function updateCrosshair()
     VerticalLine.To = Vector2.new(centerX, centerY + Real_Size)
 end
 
+-- Connect the updateCrosshair function to RenderStepped
 RunService.RenderStepped:Connect(updateCrosshair)
 
+-- Ensure the crosshair recenters when the viewport size changes
 if settings.recenter then
     cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
         updateCrosshair()
     end)
 end
 
+-- Function to toggle the crosshair visibility
 local function toggleCrosshair()
     settings.recenter = not settings.recenter
     HorizontalLine.Visible = settings.recenter
@@ -2029,11 +2050,13 @@ local function toggleCrosshair()
     updateButtonColor(CrossEnab, settings.recenter)
 end
 
+-- Function to toggle the pulsation
 local function togglePulsate()
     settings.pulsate = not settings.pulsate
     updateButtonColor(Pulse, settings.pulsate)
 end
 
+-- Function to update the button color
 local function updateButtonColor(button, isEnabled)
     if button and isEnabled ~= nil then
         if isEnabled then
@@ -2062,3 +2085,4 @@ if CrossEnab and Pulse then
 else
     warn("CrossEnab or Pulse is nil")
 end
+
