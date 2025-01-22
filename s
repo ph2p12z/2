@@ -1942,3 +1942,105 @@ local function updateButtonColor(button, isEnabled)
 end
 
 updateButtonColor(Silent, isSilentEnabled)
+
+local settings = {
+    color = Color3.fromRGB(255, 255, 255),
+    thickness = 2,
+    length = 8,
+    opacity = 1,
+    x_offset = 0,
+    y_offset = 0,
+    recenter = true,
+    pulsate = false,
+    pulsateSpeed = 4,
+    pulsateVariation = 0.9,
+    pulsateChangeInterval = 2,
+    minPulsateSize = 6,
+    maxPulsateSize = 16
+}
+
+local cam = workspace.CurrentCamera or workspace:FindFirstChildOfClass("Camera")
+local RunService = game:GetService("RunService")
+
+local function draw(type, properties)
+    local obj = Drawing.new(type)
+    for i, v in pairs(properties) do
+        obj[i] = v
+    end
+    return obj
+end
+
+local HorizontalLine = draw("Line", {
+    From = Vector2.new(0, 0),
+    To = Vector2.new(0, 0),
+    Thickness = settings.thickness,
+    Color = settings.color,
+    Transparency = settings.opacity,
+    Visible = false
+})
+
+local VerticalLine = draw("Line", {
+    From = Vector2.new(0, 0),
+    To = Vector2.new(0, 0),
+    Thickness = settings.thickness,
+    Color = settings.color,
+    Transparency = settings.opacity,
+    Visible = false
+})
+
+local pulsateSpeed = settings.pulsateSpeed
+local lastPulsateChange = tick()
+
+local function updateCrosshair()
+    if not settings.pulsate and not settings.recenter then return end
+    local centerX = cam.ViewportSize.x / 2
+    local centerY = cam.ViewportSize.y / 2
+    local Real_Size = settings.length
+
+    if settings.pulsate then
+        local time = tick()
+        local pulsateFactor = (math.sin(time * pulsateSpeed) + 1) / 2
+        Real_Size = settings.minPulsateSize + (settings.maxPulsateSize - settings.minPulsateSize) * pulsateFactor
+
+        if time - lastPulsateChange > settings.pulsateChangeInterval then
+            pulsateSpeed = settings.pulsateSpeed + math.random(-settings.pulsateVariation, settings.pulsateVariation)
+            lastPulsateChange = time
+        end
+    end
+
+    HorizontalLine.From = Vector2.new(centerX - Real_Size, centerY)
+    HorizontalLine.To = Vector2.new(centerX + Real_Size, centerY)
+    VerticalLine.From = Vector2.new(centerX, centerY - Real_Size)
+    VerticalLine.To = Vector2.new(centerX, centerY + Real_Size)
+end
+
+RunService.RenderStepped:Connect(updateCrosshair)
+
+if settings.recenter then
+    cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+        updateCrosshair()
+    end)
+end
+
+local function toggleCrosshair()
+    settings.recenter = not settings.recenter
+    HorizontalLine.Visible = settings.recenter
+    VerticalLine.Visible = settings.recenter
+    updateButtonColor(CrossEnab, settings.recenter)
+end
+
+local function togglePulsate()
+    settings.pulsate = not settings.pulsate
+    updateButtonColor(Pulse, settings.pulsate)
+end
+
+CrossEnab.MouseButton1Click:Connect(function()
+    toggleCrosshair()
+end)
+
+Pulse.MouseButton1Click:Connect(function()
+    togglePulsate()
+end)
+
+updateButtonColor(CrossEnab, settings.recenter)
+updateButtonColor(Pulse, settings.pulsate)
