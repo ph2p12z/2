@@ -1943,10 +1943,6 @@ end
 
 updateButtonColor(Silent, isSilentEnabled)
 
--- Ensure the script is being loaded correctly
-print("Script loaded successfully")
-
--- Define the settings for the crosshair and pulsation
 local settings = {
     color = Color3.fromRGB(255, 255, 255),
     thickness = 2,
@@ -1976,6 +1972,15 @@ if not RunService then
     warn("RunService not found")
     return
 end
+
+-- Ensure the Player and PlayerGui are available
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local screenGui = playerGui:WaitForChild("ScreenGuiName") -- Замените "ScreenGuiName" на имя вашего ScreenGui
+
+-- Ensure CrossEnab and Pulse buttons are available
+local CrossEnab = screenGui:WaitForChild("CrossEnab") -- Замените "CrossEnab" на имя вашей кнопки
+local Pulse = screenGui:WaitForChild("Pulse") -- Замените "Pulse" на имя вашей кнопки
 
 -- Function to create drawing objects
 local function draw(type, properties)
@@ -2085,4 +2090,3 @@ if CrossEnab and Pulse then
 else
     warn("CrossEnab or Pulse is nil")
 end
-
