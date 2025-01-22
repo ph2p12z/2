@@ -2035,21 +2035,30 @@ local function togglePulsate()
 end
 
 local function updateButtonColor(button, isEnabled)
-    if isEnabled then
-        button.BackgroundColor3 = Color3.fromRGB(87, 90, 150)
+    if button and isEnabled ~= nil then
+        if isEnabled then
+            button.BackgroundColor3 = Color3.fromRGB(87, 90, 150)
+        else
+            button.BackgroundColor3 = Color3.new(0.0470588, 0.0470588, 0.0470588)
+        end
     else
-        button.BackgroundColor3 = Color3.new(0.0470588, 0.0470588, 0.0470588)
+        warn("updateButtonColor called with nil button or isEnabled")
     end
 end
 
-CrossEnab.MouseButton1Click:Connect(function()
-    toggleCrosshair()
-end)
+-- Ensure CrossEnab and Pulse are defined
+if CrossEnab and Pulse then
+    CrossEnab.MouseButton1Click:Connect(function()
+        toggleCrosshair()
+    end)
 
-Pulse.MouseButton1Click:Connect(function()
-    togglePulsate()
-end)
+    Pulse.MouseButton1Click:Connect(function()
+        togglePulsate()
+    end)
 
--- Ensure the initial state is set correctly
-updateButtonColor(CrossEnab, settings.recenter)
-updateButtonColor(Pulse, settings.pulsate)
+    -- Ensure the initial state is set correctly
+    updateButtonColor(CrossEnab, settings.recenter)
+    updateButtonColor(Pulse, settings.pulsate)
+else
+    warn("CrossEnab or Pulse is nil")
+end
