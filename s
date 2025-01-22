@@ -1,7 +1,7 @@
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = true
-FOVCircle.Radius = 180
-FOVCircle.Thickness = 2
+FOVCircle.Radius = 80
+FOVCircle.Thickness = 1
 FOVCircle.Filled = false
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 FOVCircle.Position = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2)
