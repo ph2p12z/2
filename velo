@@ -225,20 +225,3 @@ for _,v in next,game:GetService("Workspace"):GetDescendants() do
        end)
      end)
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local ArmorModels = ReplicatedStorage:WaitForChild("ArmorModels")
-
-local purpleColor = Color3.fromRGB(128, 0, 128) 
-
-local function changeColor(model)
-    for _, part in ipairs(model:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Color = purpleColor
-        end
-    end
-end
-
-for _, model in ipairs(ArmorModels:GetChildren()) do
-    changeColor(model)
-end
