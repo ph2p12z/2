@@ -1919,3 +1919,4 @@ task.spawn(function()
 end)
 
 loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/ddd/refs/heads/main/3232'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/2/refs/heads/main/fys'))()
