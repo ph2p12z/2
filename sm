@@ -85,7 +85,7 @@ local cam = workspace.CurrentCamera or workspace:FindFirstChildOfClass("Camera")
 local RunService = game:GetService("RunService")
 local RunService = game:GetService("RunService");
 local Camera = workspace.CurrentCamera;
-local IgnoreFolder = workspace:WaitForChild("Ignore");
+local Ignore = workspace.Const:WaitForChild("Ignore");
 local WeaponInfo = {};
 local SleepAnimationId = "rbxassetid://13280887764";
 local Lighting = game:GetService("Lighting")
@@ -1301,9 +1301,9 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local LocalPlayer = game:GetService('Players').LocalPlayer
 local Workspace = game:GetService('Workspace')
 local Camera = game:GetService('Workspace').CurrentCamera
-local Ignore = Workspace:FindFirstChild('Ignore')
-local FPSArms = Ignore:FindFirstChild('FPSArms')
-local ClientPlayer = Ignore:FindFirstChild('LocalCharacter')
+local Ignore = workspace.Const:WaitForChild("Ignore");
+local FPSArms = workspace.Const.Ignore:FindFirstChild('FPSArms')
+local ClientPlayer = workspace.Const.Ignore:FindFirstChild('LocalCharacter')
 local SleepAnimationId = "rbxassetid://13280887764"
 
 local HeadIndex
@@ -1582,33 +1582,23 @@ updateButtonColor(Xray, xrayEnabled)
 Keybind_2.Text = "None"
 setupSlider(Slider_2, SlidePart_4, TextLabel_16, 10, 1)  
 
-local longneck = {
-    LongNeckEnabled = false,
-    UpperLimitDefault = 7,
-    LowerLimitDefault = 2.89,
-    EnabledHeight = 8,
-    DisabledHeight = 2.89,
-}
+local prism1 = workspace.Const.Ignore.LocalCharacter.Top.Prism1
+local originalPosition = prism1.CFrame
 
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local LocalCharacter = Workspace.Ignore.LocalCharacter
-local PrismaticConstraint = LocalCharacter.Bottom.PrismaticConstraint
-
-local function updateLimits()
-    if longneck.LongNeckEnabled then
-        PrismaticConstraint.UpperLimit = longneck.EnabledHeight
-        PrismaticConstraint.LowerLimit = longneck.EnabledHeight
+local function updatePrism1Position(isEnabled)
+    if isEnabled then
+        prism1.CFrame = prism1.CFrame + Vector3.new(0, -5, 0)
     else
-        PrismaticConstraint.UpperLimit = longneck.UpperLimitDefault
-        PrismaticConstraint.LowerLimit = longneck.LowerLimitDefault
+        prism1.CFrame = originalPosition
     end
 end
 
-local function toggleLongneck()
-    longneck.LongNeckEnabled = not longneck.LongNeckEnabled
-    updateButtonColor(Longneck, longneck.LongNeckEnabled)
-    updateLimits()
+local isPrism1Enabled = false
+
+local function togglePrism1()
+    isPrism1Enabled = not isPrism1Enabled
+    updatePrism1Position(isPrism1Enabled)
+    updateButtonColor(Longneck, isPrism1Enabled)
 end
 
 local function updateButtonColor(button, isEnabled)
@@ -1619,38 +1609,39 @@ local function updateButtonColor(button, isEnabled)
     end
 end
 
-local currentLongneckKeybind = nil
-local listeningForLongneckKeybind = false
+local currentPrism1Keybind = nil
+local listeningForPrism1Keybind = false
 
 local function setKeybind(key, picker, listener)
     if picker == Keybind then
-        currentLongneckKeybind = key
+        currentPrism1Keybind = key
     end
     picker.Text = key.Name
     listener = false
 end
 
 Keybind.MouseButton1Click:Connect(function()
-    listeningForLongneckKeybind = true
+    listeningForPrism1Keybind = true
     Keybind.Text = "..."
 end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
-        if listeningForLongneckKeybind then
-            setKeybind(input.KeyCode, Keybind, listeningForLongneckKeybind)
-            listeningForLongneckKeybind = false
-        elseif input.KeyCode == currentLongneckKeybind then
-            toggleLongneck()
+        if listeningForPrism1Keybind then
+            setKeybind(input.KeyCode, Keybind, listeningForPrism1Keybind)
+            listeningForPrism1Keybind = false
+        elseif input.KeyCode == currentPrism1Keybind then
+            togglePrism1()
         end
     end
 end)
 
 Longneck.MouseButton1Click:Connect(function()
-    toggleLongneck()
+    togglePrism1()
 end)
 
-updateButtonColor(Longneck, longneck.LongNeckEnabled)
+updateButtonColor(Longneck, isPrism1Enabled)
+
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -1693,7 +1684,7 @@ local function GetClosestATV()
 
     for _, v in ipairs(Workspace:GetChildren()) do
         if v:FindFirstChild("Seat") and v:FindFirstChild("Plastics") then
-            local distance = (v.Plastics.Position - Workspace.Ignore.LocalCharacter.Middle.Position).Magnitude
+            local distance = (v.Plastics.Position - Workspace.Const.Ignore.LocalCharacter.Middle.Position).Magnitude
             if distance < closestDistance then
                 closestATV = v
                 closestDistance = distance
@@ -1917,6 +1908,55 @@ task.spawn(function()
         end
     end
 end)
+
+local GrassRemove = true
+
+if GrassRemove == true then
+    sethiddenproperty(game.Workspace.Terrain, "Decoration", false)
+else
+    sethiddenproperty(game.Workspace.Terrain, "Decoration", true)
+end
+
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/ddd/refs/heads/main/as'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/ddd/refs/heads/main/crs'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/2/refs/heads/main/saaa'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/2a/refs/heads/main/sf'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/2a/refs/heads/main/afas'))()
+
+for i,v in getgc(true) do
+    if typeof(v) == "function" and debug.getinfo(v).name == "fire" then
+        local old; old = hookfunction(v, function(...)
+            local args = {...}
+
+            
+            args[1].AimRecoil.camerX = 0
+            args[1].AimRecoil.cameraY = 0
+            args[1].AimRecoil.push = 0
+
+          
+            args[1].HipRecoil.camerX = 0
+            args[1].HipRecoil.cameraY = 0
+            args[1].HipRecoil.push = 0
+
+            
+            args[1].Accuracy = math.huge
+
+            
+
+            args[1].FireAction = "auto"
+
+            local mt = getmetatable(args[1]) 
+            if mt then
+                if mt.__index then
+                    for key, value in pairs(mt.__index) do
+                    end
+                end
+            end
+            return old(unpack(args))
+        end)
+    end
+end
+
 
 loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/ddd/refs/heads/main/3232'))()
 loadstring(game:HttpGet('https://raw.githubusercontent.com/ph2p12z/2/refs/heads/main/fys'))()
